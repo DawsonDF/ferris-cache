@@ -42,18 +42,21 @@ Plain text over TCP, one command per line, `\r\n` terminated. Multiple commands 
 
 | Command | Response |
 |---|---|
-| `SET <key> <value>` | `OK` |
+| `SET <key> <value>` | `OK` (no expiry) |
+| `SET <key> <value> <ttl_seconds>` | `OK` (expires after N seconds) |
+| `SET <key> <value> 0` | `ERR TTL must be a positive integer` |
 | `SET <key>` | `ERR wrong number of arguments` |
 | `GET <key>` | `<value>` or `NIL` |
 | `DELETE <key>` | `OK` or `NIL` |
 | `FLUSH` | `OK` |
 | anything else | `ERR unknown command` |
 
-Values may contain spaces — everything after the key is treated as the value:
+Values may contain spaces — everything after the key is treated as the value. When a TTL is provided, it must be the last token and a positive integer:
 
 ```
-SET msg hello world   →  OK
-GET msg               →  hello world
+SET msg hello world      →  OK           (value: "hello world", no expiry)
+SET msg hello world 60   →  OK           (value: "hello world", expires in 60s)
+GET msg                  →  hello world
 ```
 
 ---

@@ -21,6 +21,8 @@ async fn send(port: u16, input: &str) -> String {
     response
 }
 
+// --- GET / SET / DELETE / FLUSH ---
+
 #[tokio::test]
 async fn set_and_get() {
     let port = start_test_server().await;
@@ -93,4 +95,43 @@ async fn pipeline_multiple_commands() {
     let port = start_test_server().await;
     let response = send(port, "SET a 1\r\nSET b 2\r\nGET a\r\nGET b\r\nDELETE a\r\nGET a\r\n").await;
     assert_eq!(response, "OK\r\nOK\r\n1\r\n2\r\nOK\r\nNIL\r\n");
+}
+
+// --- TTL ---
+
+#[tokio::test]
+async fn set_with_ttl_returns_ok() {
+    let port = start_test_server().await;
+    assert_eq!(send(port, "SET k value 60\r\n").await, "OK\r\n");
+}
+
+#[tokio::test]
+async fn get_unexpired_key_returns_value() {
+    let port = start_test_server().await;
+    send(port, "SET k value 60\r\n").await;
+    assert_eq!(send(port, "GET k\r\n").await, "value\r\n");
+}
+
+#[tokio::test]
+async fn get_expired_key_returns_nil() {
+    let port = start_test_server().await;
+    send(port, "SET k value 1\r\n").await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(1100)).await;
+    assert_eq!(send(port, "GET k\r\n").await, "NIL\r\n");
+}
+
+#[tokio::test]
+async fn set_with_zero_ttl_returns_error() {
+    let port = start_test_server().await;
+    assert_eq!(
+        send(port, "SET k value 0\r\n").await,
+        "ERR TTL must be a positive integer\r\n"
+    );
+}
+
+#[tokio::test]
+async fn set_without_ttl_still_works() {
+    let port = start_test_server().await;
+    assert_eq!(send(port, "SET k value\r\n").await, "OK\r\n");
+    assert_eq!(send(port, "GET k\r\n").await, "value\r\n");
 }
