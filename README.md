@@ -28,7 +28,7 @@ ferris-cache is the answer to: **what is the absolute minimum viable cache?**
 ## What it is not
 
 - **Not persistent.** Data lives in memory. Pod restart means cache gone. This is intentional.
-- **Not a Redis replacement.** No TTLs, no pub/sub, no sorted sets, no Lua scripting, no AUTH, no clustering.
+- **Not a Redis replacement.** No pub/sub, no sorted sets, no Lua scripting, no AUTH, no clustering.
 - **Not production-hardened for untrusted networks.** There is no authentication. Run it inside your cluster, not on a public interface.
 - **Minimal configuration.** One optional environment variable: `FERRIS_BIND`. No config files. Defaults to `0.0.0.0:7878`.
 
